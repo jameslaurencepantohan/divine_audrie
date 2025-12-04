@@ -1,10 +1,12 @@
-import { db } from '../../../lib/db';
+import { sql } from '../../../lib/neon';
 
 export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
-      const [rows] = await db.query('SELECT * FROM products ORDER BY created_at DESC');
-      return res.status(200).json({ products: rows });
+      const products = await sql`
+        SELECT * FROM products ORDER BY created_at DESC
+      `;
+      return res.status(200).json({ products });
     }
 
     if (req.method === 'POST') {
@@ -14,15 +16,15 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'All fields are required.' });
       }
 
-      const result = await db.query(
-        `INSERT INTO products (name, price, description)
-         VALUES (?, ?, ?)`,
-        [name, price, description]
-      );
+      const [newProduct] = await sql`
+        INSERT INTO products (name, price, description)
+        VALUES (${name}, ${price}, ${description})
+        RETURNING *;
+      `;
 
       return res.status(200).json({
         message: 'Product added successfully!',
-        productId: result.insertId
+        productId: newProduct.id,
       });
     }
 
@@ -33,14 +35,20 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'All fields are required.' });
       }
 
-      await db.query(
-        `UPDATE products
-         SET name=?, price=?, description=?, updated_at=NOW()
-         WHERE id=?`,
-        [name, price, description, id]
-      );
+      const [updatedProduct] = await sql`
+        UPDATE products
+        SET name = ${name},
+            price = ${price},
+            description = ${description},
+            updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *;
+      `;
 
-      return res.status(200).json({ message: 'Product updated successfully.' });
+      return res.status(200).json({
+        message: 'Product updated successfully.',
+        product: updatedProduct,
+      });
     }
 
     if (req.method === 'DELETE') {
@@ -49,7 +57,10 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Product ID is required.' });
       }
 
-      await db.query('DELETE FROM products WHERE id=?', [id]);
+      await sql`
+        DELETE FROM products WHERE id = ${id};
+      `;
+
       return res.status(200).json({ message: 'Product deleted successfully.' });
     }
 

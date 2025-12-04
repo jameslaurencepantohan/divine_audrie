@@ -1,15 +1,21 @@
-import { db } from '../../../lib/db';
+import { sql } from '../../../lib/neon';
 
 export default async function handler(req, res) {
   try {
     // 1. Fetch all products (inventory)
-    const [products] = await db.query('SELECT * FROM products ORDER BY created_at DESC');
+    const products = await sql`
+      SELECT * FROM products ORDER BY created_at DESC
+    `;
 
     // 2. Fetch all orders
-    const [orders] = await db.query('SELECT * FROM orders ORDER BY created_at DESC');
+    const orders = await sql`
+      SELECT * FROM orders ORDER BY created_at DESC
+    `;
 
     // 3. Fetch all order items
-    const [orderItems] = await db.query('SELECT * FROM order_items ORDER BY order_id DESC');
+    const orderItems = await sql`
+      SELECT * FROM order_items ORDER BY order_id DESC
+    `;
 
     // Attach order items to their respective orders
     const ordersWithItems = orders.map(order => ({

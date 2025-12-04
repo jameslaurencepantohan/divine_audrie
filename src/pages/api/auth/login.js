@@ -1,8 +1,9 @@
-import { db } from '../../../lib/db';
+import { sql } from '../../../lib/neon';
 import bcrypt from 'bcrypt';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
+  if (req.method !== 'POST') 
+    return res.status(405).json({ message: 'Method not allowed' });
 
   const { username, password, role } = req.body;
 
@@ -12,10 +13,9 @@ export default async function handler(req, res) {
 
   try {
     // Check if a user exists with username and role
-    const [users] = await db.query(
-      'SELECT * FROM users WHERE username = ? AND role = ?',
-      [username, role]
-    );
+    const users = await sql`
+      SELECT * FROM users WHERE username = ${username} AND role = ${role}
+    `;
 
     if (users.length === 0) {
       return res.status(401).json({ message: 'Invalid credentials or role' });

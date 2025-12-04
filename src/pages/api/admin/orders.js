@@ -1,8 +1,8 @@
-import { db } from '../../../lib/db';
+import { sql } from '../../../lib/neon';
 
 export default async function handler(req, res) {
   try {
-    
+
     // ======================
     // 🔵 CREATE ORDER
     // ======================
@@ -16,12 +16,11 @@ export default async function handler(req, res) {
       // Fetch product data from DB
       const productIds = products.map(p => p.id);
 
-      const [dbProducts] = await db.query(
-        `SELECT id, name, price 
-         FROM products 
-         WHERE id IN (${productIds.map(() => '?').join(',')})`,
-        productIds
-      );
+      const dbProducts = await sql`
+        SELECT id, name, price
+        FROM products
+        WHERE id IN (${sql(productIds)})
+      `;
 
       // Validate that all selected products exist
       for (const ordered of products) {
@@ -39,70 +38,55 @@ export default async function handler(req, res) {
       }
 
       // Insert order
-      const [orderResult] = await db.query(
-        `INSERT INTO orders (customer_name, total_amount)
-         VALUES (?, ?)`,
-        ['Admin', totalAmount]
-      );
+      const [orderResult] = await sql`
+        INSERT INTO orders (customer_name, total_amount)
+        VALUES ('Admin', ${totalAmount})
+        RETURNING *;
+      `;
 
-      const orderId = orderResult.insertId;
+      const orderId = orderResult.id;
 
-      // Insert each item into product_orders table
+      // Insert each item into order_items table
       for (const ordered of products) {
         const found = dbProducts.find(p => p.id === ordered.id);
 
-        await db.query(
-          `INSERT INTO order_items 
-           (order_id, product_id, product_name, quantity, price)
-           VALUES (?, ?, ?, ?, ?)`,
-          [
-            orderId,
-            found.id,
-            found.name,
-            ordered.quantity,
-            found.price
-          ]
-        );
+        await sql`
+          INSERT INTO order_items
+            (order_id, product_id, product_name, quantity, price)
+          VALUES
+            (${orderId}, ${found.id}, ${found.name}, ${ordered.quantity}, ${found.price});
+        `;
       }
 
       return res.status(200).json({
         message: 'Order created successfully!',
-        orderId
+        orderId,
       });
     }
-
 
     // ======================
     // 🔵 GET ORDERS + ITEMS
     // ======================
     if (req.method === 'GET') {
       // Fetch all orders
-      const [orders] = await db.query(
-        `SELECT * FROM orders ORDER BY created_at DESC`
-      );
+      const orders = await sql`
+        SELECT * FROM orders ORDER BY created_at DESC
+      `;
 
       // Fetch all items
-      const [items] = await db.query(
-        `SELECT 
-            id,
-            order_id,
-            product_id,
-            product_name,
-            quantity,
-            price
-          FROM order_items
-          ORDER BY order_id DESC`
-      );
+      const items = await sql`
+        SELECT id, order_id, product_id, product_name, quantity, price
+        FROM order_items
+        ORDER BY order_id DESC
+      `;
 
       // Attach items to corresponding orders
       const ordersWithItems = orders.map(order => ({
         ...order,
-        items: items.filter(i => i.order_id === order.id)
+        items: items.filter(i => i.order_id === order.id),
       }));
 
-      return res.status(200).json({
-        orders: ordersWithItems
-      });
+      return res.status(200).json({ orders: ordersWithItems });
     }
 
     // Invalid method
