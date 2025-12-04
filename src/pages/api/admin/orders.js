@@ -2,54 +2,61 @@ import { sql } from '../../../lib/neon';
 
 export default async function handler(req, res) {
   try {
-
     // ======================
     // 🔵 CREATE ORDER
     // ======================
     if (req.method === 'POST') {
-      const { products } = req.body;
+      const { products, customer_name = 'Admin' } = req.body;
 
-      if (!products || !products.length) {
+      if (!products || !Array.isArray(products) || products.length === 0) {
         return res.status(400).json({ message: 'No products selected.' });
       }
 
-      // Fetch product data from DB
-      const productIds = products.map(p => p.id);
+      const productIds = products.map(p => Number(p.id)).filter(Boolean);
+      if (!productIds.length) {
+        return res.status(400).json({ message: 'Invalid product IDs.' });
+      }
 
+      // Fetch product data
       const dbProducts = await sql`
         SELECT id, name, price
         FROM products
-        WHERE id IN (${sql(productIds)})
+        WHERE id = ANY(${productIds})
       `;
 
-      // Validate that all selected products exist
+      if (!dbProducts || dbProducts.length === 0) {
+        return res.status(400).json({ message: 'Selected products not found.' });
+      }
+
+      // Validate all products exist
       for (const ordered of products) {
-        const found = dbProducts.find(p => p.id === ordered.id);
+        const found = dbProducts.find(p => Number(p.id) === Number(ordered.id));
         if (!found) {
           return res.status(400).json({ message: `Product ID ${ordered.id} not found.` });
         }
       }
 
-      // Calculate total
-      let totalAmount = 0;
-      for (const ordered of products) {
-        const found = dbProducts.find(p => p.id === ordered.id);
-        totalAmount += found.price * ordered.quantity;
-      }
+      // Calculate total amount
+      const totalAmount = products.reduce((sum, ordered) => {
+        const found = dbProducts.find(p => Number(p.id) === Number(ordered.id));
+        return sum + found.price * ordered.quantity;
+      }, 0);
 
-      // Insert order
+      // Insert order with default status 'pending'
       const [orderResult] = await sql`
-        INSERT INTO orders (customer_name, total_amount)
-        VALUES ('Admin', ${totalAmount})
+        INSERT INTO orders (customer_name, total_amount, status)
+        VALUES (${customer_name}, ${totalAmount}, 'pending')
         RETURNING *;
       `;
 
-      const orderId = orderResult.id;
+      const orderId = orderResult?.id;
+      if (!orderId) {
+        return res.status(500).json({ message: 'Failed to create order.' });
+      }
 
-      // Insert each item into order_items table
+      // Insert order items
       for (const ordered of products) {
-        const found = dbProducts.find(p => p.id === ordered.id);
-
+        const found = dbProducts.find(p => Number(p.id) === Number(ordered.id));
         await sql`
           INSERT INTO order_items
             (order_id, product_id, product_name, quantity, price)
@@ -58,7 +65,7 @@ export default async function handler(req, res) {
         `;
       }
 
-      return res.status(200).json({
+      return res.status(201).json({
         message: 'Order created successfully!',
         orderId,
       });
@@ -68,19 +75,16 @@ export default async function handler(req, res) {
     // 🔵 GET ORDERS + ITEMS
     // ======================
     if (req.method === 'GET') {
-      // Fetch all orders
       const orders = await sql`
-        SELECT * FROM orders ORDER BY created_at DESC
+        SELECT *, COALESCE(status, 'pending') AS status
+        FROM orders
+        ORDER BY created_at DESC;
       `;
 
-      // Fetch all items
       const items = await sql`
-        SELECT id, order_id, product_id, product_name, quantity, price
-        FROM order_items
-        ORDER BY order_id DESC
+        SELECT * FROM order_items ORDER BY order_id DESC;
       `;
 
-      // Attach items to corresponding orders
       const ordersWithItems = orders.map(order => ({
         ...order,
         items: items.filter(i => i.order_id === order.id),
@@ -94,7 +98,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: `Method ${req.method} not allowed` });
 
   } catch (error) {
-    console.error('Order API Error:', error);
-    return res.status(500).json({ message: 'Internal server error.' });
+    console.error('Orders API Error:', error.message);
+    console.error(error.stack);
+    return res.status(500).json({
+      message: 'Internal server error.',
+      error: error.message,
+    });
   }
 }

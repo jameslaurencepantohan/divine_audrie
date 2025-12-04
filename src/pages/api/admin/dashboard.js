@@ -7,10 +7,18 @@ export default async function handler(req, res) {
       SELECT * FROM products ORDER BY created_at DESC
     `;
 
-    // 2. Fetch all orders
+    // 2. Fetch all orders and normalize status
     const orders = await sql`
-      SELECT * FROM orders ORDER BY created_at DESC
+      SELECT *, COALESCE(status, 'pending') AS status
+      FROM orders
+      ORDER BY created_at DESC
     `;
+
+    // Normalize statuses to lowercase trimmed strings
+    const normalizedOrders = orders.map(order => ({
+      ...order,
+      status: (order.status || 'pending').toLowerCase().trim(),
+    }));
 
     // 3. Fetch all order items
     const orderItems = await sql`
@@ -18,33 +26,29 @@ export default async function handler(req, res) {
     `;
 
     // Attach order items to their respective orders
-    const ordersWithItems = orders.map(order => ({
+    const ordersWithItems = normalizedOrders.map(order => ({
       ...order,
       items: orderItems.filter(item => item.order_id === order.id),
     }));
 
     // 4. Calculate summary
-
-    // Total income: sum of total_amount for paid orders
-    const totalIncome = orders
+    const totalIncome = normalizedOrders
       .filter(order => order.status === 'paid')
       .reduce((sum, order) => sum + Number(order.total_amount || 0), 0);
 
-    // Pending orders count (status = 'unpaid' or 'pending')
-    const pending = orders.filter(order => order.status === 'unpaid' || order.status === 'pending').length;
+    const pending = normalizedOrders.filter(order => order.status === 'pending' || order.status === 'unpaid').length;
 
-    // Cancelled orders count (status = 'cancelled')
-    const cancelled = orders.filter(order => order.status === 'cancelled').length;
+    const cancelled = normalizedOrders.filter(order => order.status === 'cancelled').length;
 
-    // Respond with all data combined
+    // 5. Respond with all data combined
     return res.status(200).json({
       products,
       orders: ordersWithItems,
       summary: {
         totalIncome,
         pending,
-        cancelled
-      }
+        cancelled,
+      },
     });
 
   } catch (error) {
