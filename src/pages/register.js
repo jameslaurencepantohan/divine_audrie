@@ -11,13 +11,13 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Password confirmation check
     if (form.password !== confirmPassword) {
       alert('Passwords do not match!');
       return;
     }
-    
+
     // Password strength validation
     if (form.password.length < 6) {
       alert('Password must be at least 6 characters long');
@@ -33,13 +33,19 @@ export default function Register() {
         body: JSON.stringify(form),
       });
 
-      const data = await res.json();
+      let data = {};
+      const text = await res.text(); // read response as text
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (err) {
+        console.warn('Failed to parse JSON response:', err);
+      }
 
       if (res.ok) {
         alert('Account created successfully!');
         router.push('/login');
       } else {
-        alert(data.message || 'Registration failed.');
+        alert(data.message || `Registration failed with status ${res.status}.`);
       }
     } catch (err) {
       console.error(err);
@@ -68,10 +74,7 @@ export default function Register() {
         position: 'relative'
       }}>
         {/* POS Header */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '2rem'
-        }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
             width: '60px',
             height: '60px',
@@ -84,22 +87,11 @@ export default function Register() {
             fontSize: '24px',
             color: 'white',
             fontWeight: 'bold'
-          }}>
-            POS
-          </div>
-          <h1 style={{
-            color: '#2d3748',
-            margin: '0 0 0.5rem 0',
-            fontSize: '28px',
-            fontWeight: '700'
-          }}>
+          }}>POS</div>
+          <h1 style={{ color: '#2d3748', margin: '0 0 0.5rem 0', fontSize: '28px', fontWeight: '700' }}>
             Create Account
           </h1>
-          <p style={{
-            color: '#718096',
-            margin: 0,
-            fontSize: '14px'
-          }}>
+          <p style={{ color: '#718096', margin: 0, fontSize: '14px' }}>
             Join our POS system
           </p>
         </div>
@@ -107,18 +99,10 @@ export default function Register() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Username Field */}
           <div>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#4a5568',
-              fontWeight: '600',
-              fontSize: '14px'
-            }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#4a5568', fontWeight: '600', fontSize: '14px' }}>
               Username
             </label>
-            <div style={{
-              position: 'relative'
-            }}>
+            <div style={{ position: 'relative' }}>
               <input
                 name="username"
                 placeholder="Choose a username"
@@ -137,13 +121,7 @@ export default function Register() {
                   background: '#f8fafc'
                 }}
               />
-              <div style={{
-                position: 'absolute',
-                left: '1rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#718096'
-              }}>
+              <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#718096' }}>
                 👤
               </div>
             </div>
@@ -151,26 +129,11 @@ export default function Register() {
 
           {/* Password Field */}
           <div>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#4a5568',
-              fontWeight: '600',
-              fontSize: '14px'
-            }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#4a5568', fontWeight: '600', fontSize: '14px' }}>
               Password
-              <span style={{
-                fontSize: '12px',
-                color: '#718096',
-                fontWeight: 'normal',
-                marginLeft: '0.5rem'
-              }}>
-                (min. 6 characters)
-              </span>
+              <span style={{ fontSize: '12px', color: '#718096', fontWeight: 'normal', marginLeft: '0.5rem' }}>(min. 6 characters)</span>
             </label>
-            <div style={{
-              position: 'relative'
-            }}>
+            <div style={{ position: 'relative' }}>
               <input
                 name="password"
                 type="password"
@@ -190,47 +153,30 @@ export default function Register() {
                   background: '#f8fafc'
                 }}
               />
-              <div style={{
-                position: 'absolute',
-                left: '1rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#718096'
-              }}>
+              <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#718096' }}>
                 🔐
               </div>
             </div>
-            
+
             {/* Password strength indicator */}
             {form.password && (
-              <div style={{
-                marginTop: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <div style={{
-                  flex: 1,
-                  height: '4px',
-                  background: '#e2e8f0',
-                  borderRadius: '2px',
-                  overflow: 'hidden'
-                }}>
+              <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ flex: 1, height: '4px', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
                   <div style={{
                     width: `${Math.min(form.password.length * 20, 100)}%`,
                     height: '100%',
-                    background: form.password.length >= 8 ? '#48bb78' : 
+                    background: form.password.length >= 8 ? '#48bb78' :
                                form.password.length >= 6 ? '#ed8936' : '#f56565',
                     transition: 'all 0.3s'
                   }} />
                 </div>
                 <span style={{
                   fontSize: '12px',
-                  color: form.password.length >= 8 ? '#48bb78' : 
+                  color: form.password.length >= 8 ? '#48bb78' :
                          form.password.length >= 6 ? '#ed8936' : '#f56565',
                   fontWeight: '600'
                 }}>
-                  {form.password.length >= 8 ? 'Strong' : 
+                  {form.password.length >= 8 ? 'Strong' :
                    form.password.length >= 6 ? 'Medium' : 'Weak'}
                 </span>
               </div>
@@ -239,18 +185,10 @@ export default function Register() {
 
           {/* Confirm Password Field */}
           <div>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#4a5568',
-              fontWeight: '600',
-              fontSize: '14px'
-            }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#4a5568', fontWeight: '600', fontSize: '14px' }}>
               Confirm Password
             </label>
-            <div style={{
-              position: 'relative'
-            }}>
+            <div style={{ position: 'relative' }}>
               <input
                 type="password"
                 placeholder="Confirm your password"
@@ -275,19 +213,10 @@ export default function Register() {
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: confirmPassword && form.password !== confirmPassword ? '#f56565' : '#718096'
-              }}>
-                🔒
-              </div>
+              }}>🔒</div>
             </div>
             {confirmPassword && form.password !== confirmPassword && (
-              <p style={{
-                color: '#f56565',
-                fontSize: '12px',
-                marginTop: '0.25rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem'
-              }}>
+              <p style={{ color: '#f56565', fontSize: '12px', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 ⚠️ Passwords do not match
               </p>
             )}
@@ -295,13 +224,7 @@ export default function Register() {
 
           {/* Role Selector */}
           <div>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#4a5568',
-              fontWeight: '600',
-              fontSize: '14px'
-            }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#4a5568', fontWeight: '600', fontSize: '14px' }}>
               Account Type
             </label>
             <div style={{
@@ -332,8 +255,7 @@ export default function Register() {
                 }}
                 disabled={loading}
               >
-                <span>💼</span>
-                <span>Cashier</span>
+                <span>💼</span>Cashier
               </button>
               <button
                 type="button"
@@ -355,11 +277,10 @@ export default function Register() {
                 }}
                 disabled={loading}
               >
-                <span>⚙️</span>
-                <span>Admin</span>
+                <span>⚙️</span>Admin
               </button>
             </div>
-            
+
             {/* Role Description */}
             <div style={{
               marginTop: '0.5rem',
@@ -369,14 +290,7 @@ export default function Register() {
               borderLeft: '4px solid',
               borderColor: form.role === 'Admin' ? '#4299e1' : '#48bb78'
             }}>
-              <p style={{
-                margin: 0,
-                fontSize: '12px',
-                color: '#4a5568',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
+              <p style={{ margin: 0, fontSize: '12px', color: '#4a5568', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {form.role === 'Admin' ? (
                   <>⚙️ <strong>Admin:</strong> Full system access, manage users & settings</>
                 ) : (
@@ -421,19 +335,12 @@ export default function Register() {
                 Creating Account...
               </>
             ) : (
-              <>
-                ✨ Create Account →
-              </>
+              <>✨ Create Account →</>
             )}
           </button>
 
           {/* Login Link */}
-          <div style={{
-            textAlign: 'center',
-            marginTop: '1.5rem',
-            paddingTop: '1.5rem',
-            borderTop: '1px solid #e2e8f0'
-          }}>
+          <div style={{ textAlign: 'center', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
             <p style={{ color: '#718096', margin: 0, fontSize: '14px' }}>
               Already have an account?{' '}
               <button
@@ -452,31 +359,19 @@ export default function Register() {
                   gap: '0.25rem'
                 }}
               >
-                Sign In
-                <span style={{ fontSize: '12px' }}>→</span>
+                Sign In <span style={{ fontSize: '12px' }}>→</span>
               </button>
             </p>
           </div>
         </form>
 
         {/* Terms & Footer */}
-        <div style={{
-          marginTop: '2rem',
-          textAlign: 'center'
-        }}>
-          <p style={{
-            color: '#a0aec0',
-            fontSize: '11px',
-            margin: '0 0 1rem 0',
-            lineHeight: '1.4'
-          }}>
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <p style={{ color: '#a0aec0', fontSize: '11px', margin: '0 0 1rem 0', lineHeight: '1.4' }}>
             By creating an account, you agree to our Terms of Service 
             and acknowledge our Privacy Policy.
           </p>
-          <div style={{
-            color: '#a0aec0',
-            fontSize: '12px'
-          }}>
+          <div style={{ color: '#a0aec0', fontSize: '12px' }}>
             © 2024 POS System v1.0
           </div>
         </div>
