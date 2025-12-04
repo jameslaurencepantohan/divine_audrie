@@ -2,30 +2,24 @@ import { sql } from '../../../lib/neon';
 import bcrypt from 'bcrypt';
 
 export default async function handler(req, res) {
-  // Only allow POST requests
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    // Allow GET for testing if you want, otherwise just 405
+    return res.status(405).json({ message: 'Method not allowed. Use POST.' });
   }
 
-  // Ensure JSON body is parsed
-  let body;
-  try {
-    body = req.body;
-  } catch {
-    return res.status(400).json({ message: 'Invalid JSON body' });
-  }
-
-  const { username, password, role } = body;
+  const { username, password, role } = req.body;
 
   if (!username || !password || !role) {
-    return res.status(400).json({ message: 'All fields are required' });
+    return res.status(400).json({ message: 'All fields are required.' });
   }
 
   try {
-    // Check if user exists
-    const existingUsers = await sql`SELECT id FROM users WHERE username = ${username}`;
+    // Check if username exists
+    const existingUsers = await sql`
+      SELECT id FROM users WHERE username = ${username}
+    `;
     if (existingUsers.length > 0) {
-      return res.status(409).json({ message: 'Username already exists' });
+      return res.status(409).json({ message: 'Username already exists.' });
     }
 
     // Hash password
@@ -37,15 +31,18 @@ export default async function handler(req, res) {
       VALUES (${username}, ${hashedPassword}, ${role})
       RETURNING id, username, role
     `;
-
     const newUser = result[0];
 
     return res.status(201).json({
       message: 'Account created successfully!',
-      user: newUser,
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        role: newUser.role,
+      },
     });
-  } catch (err) {
-    console.error('Register API error:', err);
-    return res.status(500).json({ message: 'Internal server error' });
+  } catch (error) {
+    console.error('Register API error:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
   }
 }
