@@ -108,6 +108,37 @@ export default function CashierHome() {
           borderBottom: '1px solid #333'
         }}>
           <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              {/* Back Button */}
+              <button
+                onClick={() => router.back()}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#333',
+                  color: '#fff',
+                  border: '1px solid #444',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#444';
+                  e.currentTarget.style.borderColor = '#555';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#333';
+                  e.currentTarget.style.borderColor = '#444';
+                }}
+              >
+                <span style={{ fontSize: '1.2rem' }}>←</span>
+                Back
+              </button>
+            </div>
             <h1 style={{
               fontSize: '2.5rem',
               fontWeight: '700',

@@ -5,6 +5,7 @@ export default function Orders() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
   const [orderQuantities, setOrderQuantities] = useState({});
+  const [customerNames, setCustomerNames] = useState({});
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -31,23 +32,41 @@ export default function Orders() {
     }));
   };
 
+  // ✅ Handle customer name change
+  const handleCustomerNameChange = (productId, value) => {
+    setCustomerNames(prev => ({
+      ...prev,
+      [productId]: value
+    }));
+  };
+
   // ✅ Convert to number only during submission
   const handleSubmitOrder = async () => {
     const productsToOrder = products
       .map(p => {
         const rawValue = orderQuantities[p.id] ?? "";
         const quantity = parseInt(rawValue, 10);
+        const customerName = customerNames[p.id] || "";
 
         return {
           id: p.id,
+          name: p.name,
           quantity: !isNaN(quantity) && quantity > 0 ? quantity : 0,
-          price: p.price
+          price: p.price,
+          customerName: customerName.trim()
         };
       })
       .filter(p => p.quantity > 0);
 
     if (productsToOrder.length === 0) {
       alert('Please select at least one product to create an order.');
+      return;
+    }
+
+    // Check if all ordered products have customer names
+    const productsWithoutCustomer = productsToOrder.filter(p => !p.customerName);
+    if (productsWithoutCustomer.length > 0) {
+      alert(`Please enter customer name for: ${productsWithoutCustomer.map(p => p.name).join(', ')}`);
       return;
     }
 
@@ -62,6 +81,7 @@ export default function Orders() {
     if (res.ok) {
       alert(data.message);
       setOrderQuantities({});
+      setCustomerNames({});
       setSearch('');
       fetchProducts();
     } else {
@@ -185,9 +205,6 @@ export default function Orders() {
               <div
                 key={p.id}
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
                   padding: '1.5rem',
                   border: '1px solid #444',
                   borderRadius: '8px',
@@ -201,43 +218,87 @@ export default function Orders() {
                   e.currentTarget.style.borderColor = '#444';
                 }}
               >
-                <div>
-                  <strong style={{
-                    fontSize: '1.125rem',
-                    color: '#fff',
-                    display: 'block',
-                    marginBottom: '0.25rem'
-                  }}>{p.name}</strong>
-                  <div style={{ 
-                    color: '#b0b0b0',
-                    fontSize: '0.875rem'
-                  }}>Price: ${p.price}</div>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1rem'
+                }}>
+                  <div>
+                    <strong style={{
+                      fontSize: '1.125rem',
+                      color: '#fff',
+                      display: 'block',
+                      marginBottom: '0.25rem'
+                    }}>{p.name}</strong>
+                    <div style={{ 
+                      color: '#b0b0b0',
+                      fontSize: '0.875rem'
+                    }}>Price: ${p.price}</div>
+                  </div>
+
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Qty"
+                    value={orderQuantities[p.id] ?? ''}
+                    onChange={(e) => handleQuantityChange(p.id, e.target.value)}
+                    style={{
+                      width: '80px',
+                      padding: '0.75rem',
+                      borderRadius: '6px',
+                      border: '1px solid #444',
+                      backgroundColor: '#252525',
+                      color: '#fff',
+                      textAlign: 'center',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#667eea';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#444';
+                    }}
+                  />
                 </div>
 
-                <input
-                  type="number"
-                  min="0"
-                  value={orderQuantities[p.id] ?? ''}   // allow blank input
-                  onChange={(e) => handleQuantityChange(p.id, e.target.value)}
-                  style={{
-                    width: '80px',
-                    padding: '0.75rem',
-                    borderRadius: '6px',
-                    border: '1px solid #444',
-                    backgroundColor: '#252525',
-                    color: '#fff',
-                    textAlign: 'center',
-                    fontSize: '1rem',
-                    outline: 'none',
-                    transition: 'border-color 0.2s'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#667eea';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#444';
-                  }}
-                />
+                {/* Customer Name Section */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    color: '#b0b0b0',
+                    fontSize: '0.875rem',
+                    marginBottom: '0.5rem',
+                    fontWeight: '500'
+                  }}>
+                    Customer Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter customer name"
+                    value={customerNames[p.id] ?? ''}
+                    onChange={(e) => handleCustomerNameChange(p.id, e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '6px',
+                      border: '1px solid #444',
+                      backgroundColor: '#252525',
+                      color: '#fff',
+                      fontSize: '0.875rem',
+                      outline: 'none',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#667eea';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#444';
+                    }}
+                  />
+                </div>
               </div>
             ))
           )}

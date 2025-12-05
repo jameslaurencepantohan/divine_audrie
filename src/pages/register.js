@@ -48,9 +48,29 @@ export default function Register() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f0f2f5' }}>
-      <div style={{ background: 'white', padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '400px' }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Create Account</h1>
+    <div style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      background: 'linear-gradient(135deg, #1a1f35 0%, #0d0f1a 100%)' 
+    }}>
+      <div style={{ 
+        background: '#1e293b', 
+        padding: '2.5rem', 
+        borderRadius: '12px', 
+        width: '100%', 
+        maxWidth: '400px',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+        border: '1px solid #334155'
+      }}>
+        <h1 style={{ 
+          textAlign: 'center', 
+          marginBottom: '1.5rem',
+          color: '#f1f5f9'
+        }}>
+          Create Account
+        </h1>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <input
             name="username"
@@ -59,7 +79,14 @@ export default function Register() {
             onChange={handleChange}
             required
             disabled={loading}
-            style={{ padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
+            style={{ 
+              padding: '0.75rem', 
+              borderRadius: '6px', 
+              border: '1px solid #475569',
+              background: '#0f172a',
+              color: '#f1f5f9',
+              outline: 'none'
+            }}
           />
           <input
             type="password"
@@ -69,7 +96,14 @@ export default function Register() {
             onChange={handleChange}
             required
             disabled={loading}
-            style={{ padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
+            style={{ 
+              padding: '0.75rem', 
+              borderRadius: '6px', 
+              border: '1px solid #475569',
+              background: '#0f172a',
+              color: '#f1f5f9',
+              outline: 'none'
+            }}
           />
           <input
             type="password"
@@ -78,7 +112,14 @@ export default function Register() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             disabled={loading}
-            style={{ padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc' }}
+            style={{ 
+              padding: '0.75rem', 
+              borderRadius: '6px', 
+              border: '1px solid #475569',
+              background: '#0f172a',
+              color: '#f1f5f9',
+              outline: 'none'
+            }}
           />
 
           <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -88,11 +129,12 @@ export default function Register() {
               style={{
                 flex: 1,
                 padding: '0.5rem',
-                background: form.role === 'Cashier' ? '#667eea' : '#e2e8f0',
-                color: form.role === 'Cashier' ? 'white' : '#333',
+                background: form.role === 'Cashier' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#334155',
+                color: form.role === 'Cashier' ? 'white' : '#cbd5e1',
                 border: 'none',
                 borderRadius: '6px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s'
               }}
             >
               Cashier
@@ -103,11 +145,12 @@ export default function Register() {
               style={{
                 flex: 1,
                 padding: '0.5rem',
-                background: form.role === 'Admin' ? '#667eea' : '#e2e8f0',
-                color: form.role === 'Admin' ? 'white' : '#333',
+                background: form.role === 'Admin' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#334155',
+                color: form.role === 'Admin' ? 'white' : '#cbd5e1',
                 border: 'none',
                 borderRadius: '6px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s'
               }}
             >
               Admin
@@ -119,23 +162,50 @@ export default function Register() {
             disabled={loading}
             style={{
               padding: '0.75rem',
-              background: '#764ba2',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: 'white',
               border: 'none',
               borderRadius: '6px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontWeight: '600',
+              marginTop: '0.5rem'
             }}
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
-        <p style={{ textAlign: 'center', marginTop: '1rem' }}>
+        <p style={{ 
+          textAlign: 'center', 
+          marginTop: '1.5rem',
+          color: '#94a3b8',
+          borderTop: '1px solid #475569',
+          paddingTop: '1.5rem'
+        }}>
           Already have an account?{' '}
-          <button onClick={() => router.push('/login')} style={{ background: 'none', border: 'none', color: '#667eea', cursor: 'pointer' }}>
+          <button 
+            onClick={() => router.push('/login')} 
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: '#818cf8', 
+              cursor: 'pointer',
+              fontWeight: '600'
+            }}
+          >
             Sign In
           </button>
         </p>
       </div>
+      
+      <style jsx>{`
+        input:focus {
+          border-color: #818cf8 !important;
+        }
+        button:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+      `}</style>
     </div>
   );
 }

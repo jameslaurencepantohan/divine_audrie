@@ -582,7 +582,7 @@ export default function PaymentPage() {
                   >
                     <option value="Cash">Cash</option>
                     <option value="Credit Card">Credit Card</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
+                    
                     <option value="Gcash">Gcash</option>
                   </select>
                 </div>

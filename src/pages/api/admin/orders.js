@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     // 🔵 CREATE ORDER
     // ======================
     if (req.method === 'POST') {
-      const { products, customer_name = 'Admin' } = req.body;
+      const { products } = req.body;
 
       if (!products || !Array.isArray(products) || products.length === 0) {
         return res.status(400).json({ message: 'No products selected.' });
@@ -28,46 +28,73 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Selected products not found.' });
       }
 
-      // Validate all products exist
+      // Validate all products exist and have customer names
       for (const ordered of products) {
         const found = dbProducts.find(p => Number(p.id) === Number(ordered.id));
         if (!found) {
           return res.status(400).json({ message: `Product ID ${ordered.id} not found.` });
         }
+        if (!ordered.customerName || ordered.customerName.trim() === '') {
+          return res.status(400).json({ 
+            message: `Customer name is required for product: ${found.name}` 
+          });
+        }
       }
 
-      // Calculate total amount
-      const totalAmount = products.reduce((sum, ordered) => {
-        const found = dbProducts.find(p => Number(p.id) === Number(ordered.id));
-        return sum + found.price * ordered.quantity;
-      }, 0);
+      // Group products by customer name
+      const ordersByCustomer = {};
+      products.forEach(ordered => {
+        const customerName = ordered.customerName.trim();
+        if (!ordersByCustomer[customerName]) {
+          ordersByCustomer[customerName] = [];
+        }
+        ordersByCustomer[customerName].push(ordered);
+      });
 
-      // Insert order with default status 'pending'
-      const [orderResult] = await sql`
-        INSERT INTO orders (customer_name, total_amount, status)
-        VALUES (${customer_name}, ${totalAmount}, 'pending')
-        RETURNING *;
-      `;
+      // Create separate order for each customer
+      const createdOrders = [];
+      
+      for (const [customerName, customerProducts] of Object.entries(ordersByCustomer)) {
+        // Calculate total amount for this customer's order
+        const totalAmount = customerProducts.reduce((sum, ordered) => {
+          const found = dbProducts.find(p => Number(p.id) === Number(ordered.id));
+          return sum + found.price * ordered.quantity;
+        }, 0);
 
-      const orderId = orderResult?.id;
-      if (!orderId) {
-        return res.status(500).json({ message: 'Failed to create order.' });
-      }
-
-      // Insert order items
-      for (const ordered of products) {
-        const found = dbProducts.find(p => Number(p.id) === Number(ordered.id));
-        await sql`
-          INSERT INTO order_items
-            (order_id, product_id, product_name, quantity, price)
-          VALUES
-            (${orderId}, ${found.id}, ${found.name}, ${ordered.quantity}, ${found.price});
+        // Insert order with customer name (other columns will use default values)
+        const [orderResult] = await sql`
+          INSERT INTO orders (customer_name, total_amount, status)
+          VALUES (${customerName}, ${totalAmount}, 'pending')
+          RETURNING *;
         `;
+
+        const orderId = orderResult?.id;
+        if (!orderId) {
+          return res.status(500).json({ message: 'Failed to create order.' });
+        }
+
+        // Insert order items for this customer
+        for (const ordered of customerProducts) {
+          const found = dbProducts.find(p => Number(p.id) === Number(ordered.id));
+          await sql`
+            INSERT INTO order_items
+              (order_id, product_id, product_name, quantity, price, customer_name)
+            VALUES
+              (${orderId}, ${found.id}, ${found.name}, ${ordered.quantity}, ${found.price}, ${customerName});
+          `;
+        }
+
+        createdOrders.push({
+          orderId,
+          customerName,
+          totalAmount,
+          productCount: customerProducts.length
+        });
       }
 
       return res.status(201).json({
-        message: 'Order created successfully!',
-        orderId,
+        message: `${Object.keys(ordersByCustomer).length} order(s) created successfully!`,
+        orders: createdOrders
       });
     }
 
@@ -87,7 +114,7 @@ export default async function handler(req, res) {
 
       const ordersWithItems = orders.map(order => ({
         ...order,
-        items: items.filter(i => i.order_id === order.id),
+        order_items: items.filter(i => i.order_id === order.id),
       }));
 
       return res.status(200).json({ orders: ordersWithItems });
