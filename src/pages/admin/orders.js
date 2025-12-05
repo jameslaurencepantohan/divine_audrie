@@ -66,7 +66,7 @@ export default function Orders() {
     // Check if all ordered products have customer names
     const productsWithoutCustomer = productsToOrder.filter(p => !p.customerName);
     if (productsWithoutCustomer.length > 0) {
-      alert(`Please enter customer name for: ${productsWithoutCustomer.map(p => p.name).join(', ')}`);
+      alert(`Please enter customer name for: ₱{productsWithoutCustomer.map(p => p.name).join(', ')}`);
       return;
     }
 
@@ -234,7 +234,7 @@ export default function Orders() {
                     <div style={{ 
                       color: '#b0b0b0',
                       fontSize: '0.875rem'
-                    }}>Price: ${p.price}</div>
+                    }}>Price: ₱{p.price}</div>
                   </div>
 
                   <input

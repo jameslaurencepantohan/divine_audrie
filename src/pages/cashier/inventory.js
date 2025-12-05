@@ -217,7 +217,7 @@ export default function Inventory() {
                         color: '#10b981',
                         fontSize: '1.125rem'
                       }}>
-                        ${parseFloat(p.price).toFixed(2)}
+                        ₱{parseFloat(p.price).toFixed(2)}
                       </td>
                       <td style={{
                         padding: '1.25rem 2rem',

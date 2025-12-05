@@ -204,7 +204,7 @@ export default function AdminDashboard() {
               fontWeight: '700',
               margin: '0.5rem 0',
               color: '#fff'
-            }}>$24,580</p>
+            }}>₱24,580</p>
             <p style={{
               fontSize: '0.875rem',
               color: '#10b981',
@@ -430,64 +430,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Recent Activity Section */}
-        <div style={{
-          backgroundColor: '#1e1e1e',
-          padding: '2rem',
-          borderRadius: '12px',
-          border: '1px solid #333',
-          marginBottom: '2rem'
-        }}>
-          <h2 style={{
-            fontSize: '1.5rem',
-            fontWeight: '600',
-            marginBottom: '1.5rem',
-            color: '#fff'
-          }}>Recent Activity</h2>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem'
-          }}>
-            {[
-              { time: '10:30 AM', action: 'New order #ORD-7890 received', user: 'John Doe' },
-              { time: '09:15 AM', action: 'Inventory updated: Product X', user: 'System' },
-              { time: 'Yesterday', action: 'Payment processed: $1,250', user: 'Sarah Smith' },
-              { time: 'Nov 28', action: 'User account created', user: 'Admin' }
-            ].map((activity, index) => (
-              <div
-                key={index}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '1rem',
-                  backgroundColor: '#252525',
-                  borderRadius: '8px',
-                  borderLeft: '4px solid #667eea'
-                }}
-              >
-                <div style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: '#667eea'
-                }}></div>
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    color: '#fff',
-                    fontWeight: '500',
-                    marginBottom: '0.25rem'
-                  }}>{activity.action}</div>
-                  <div style={{
-                    fontSize: '0.875rem',
-                    color: '#b0b0b0'
-                  }}>By {activity.user} • {activity.time}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        
 
         {/* Logout Button */}
         <div style={{
