@@ -2,9 +2,7 @@ import { sql } from '../../../lib/neon';
 import bcrypt from 'bcrypt';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
+  
 
   let body = {};
   try {
